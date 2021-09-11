@@ -1,0 +1,388 @@
+1)SELECT project_id,COUNT(emp_id)
+FROM allocation
+GROUP BY project_id
+HAVING COUNT(emp_id)>=ALL(SELECT COUNT(emp_id)
+                          FROM allocation
+                          GROUP BY project_id);
+
+2)SELECT emp_id
+FROM employee
+WHERE emp_id NOT IN (SELECT emp_id
+                     FROM allocation);
+
+3)SELECT MAX(role_id)
+FROM allocation
+WHERE emp_id='E03';
+
+
+4)SELECT project_id,SUM(amount_per_day)
+FROM allocation
+GROUP BY project_id
+HAVING SUM(amount_per_day)>=ALL(SELECT SUM(amount_per_day)
+                                FROM allocation
+                                GROUP BY project_id);
+
+5)SELECT project_id,COUNT(emp_id),SUM(amount_per_day) AS value
+   FROM allocation
+   GROUP BY project_id
+   HAVING SUM(amount_per_day)>=ALL(SELECT SUM(amount_per_day)
+                                   FROM allocation
+                                   GROUP BY project_id);
+
+6)SELECT project_id,SUM((to_date - from_date)*amount_per_day)
+FROM allocation 
+WHERE EXTRACT(year FROM from_date) IN (2012) OR EXTRACT(year FROM to_date) IN (2012)
+GROUP BY project_id 
+HAVING SUM((to_date - from_date)* amount_per_day)<=ALL(SELECT SUM((to_date-from_date)* amount_per_day)
+		  				       FROM allocation
+	   					       WHERE EXTRACT(year FROM from_date) IN (2012) OR EXTRACT(year FROM to_date) IN (2012)
+	 					       GROUP BY project_id);
+   
+
+7)SELECT emp_id,emp_name,salary 												  
+FROM employee 
+WHERE emp_id =(SELECT emp_id 
+	       FROM allocation WHERE project_id = 'P02' 
+	       GROUP BY emp_id 
+	       ORDER BY count(role_id) DESC 
+	       LIMIT 1);	
+
+8)SELECT COUNT(DISTINCT project_id)
+FROM allocation WHERE emp_id;
+
+9)SELECT SUM(salary) as amount_apent
+FROM EMPLOYEE
+WHERE emp_id NOT IN (SELECT DISTINCT emp_id
+		     FROM allocation);
+
+10)SELECT COUNT(project_id)
+FROM allocation
+WHERE to_date < from_date;
+
+11)SELECT emp_id,COUNT(project_id)
+FROM allocation
+GROUP BY emp_id
+HAVING COUNT(project_id)<10;
+
+
+12)SELECT COUNT(emp_id)
+FROM allocation
+WHERE role_id='R02' AND project_id='P04';
+
+
+13)SELECT client_name,project_id
+FROM t_project tp JOIN allocation al
+ON tp.project_id=al.project_id
+GROUP BY project_name;
+
+14)SELECT emp_id
+FROM allocation
+EXCEPT(SELECT emp_id 
+       FROM allocation 
+       WHERE from_date BETWEEN '2010-01-01' AND '2010-12-31');
+
+15)SELECT EXTRACT(day FROM age(to_date, from_date))
+FROM allocation
+WHERE emp_id = 'E04' AND project_id = 'P02';
+
+
+16)SELECT project_id
+FROM t_project tp
+WHERE deadline= (SELECT MAX (to_date)
+           	 FROM allocation 
+                 WHERE project_id=tp.project_id);
+
+
+17)SELECT project_name
+FROM t_project tp JOIN allocation al
+ON tp.project_id = al.project_id
+WHERE tp.deadline <= al.to_date
+GROUP BY project_name; 
+
+18)SELECT tp.project_name
+FROM t_project tp , allocation al
+WHERE tp.deadline <= al.to_date
+GROUP BY tp.project_name;
+
+19)SELECT tp.project_name, MAX(EXTRACT(day FROM AGE(to_date, from_date)))
+FROM t_project tp JOIN allocation al
+ON tp.project_id = al.project_id
+GROUP BY tp.project_name;
+
+20)SELECT al.emp_id,(FROM_date - hire_date) bench_days 
+FROM employee emp JOIN allocation al
+ON emp.emp_id=al.emp_id;
+
+21)SELECT tp.project_name as ProjectName, count(al.emp_id) as numberOfEmployees 
+FROM t_project tp JOIN allocation al
+ON tp.project_id = al.project_id
+GROUP BY tp.project_name
+ORDER BY NumberOfEmployees desc; 
+
+ 	
+22)SELECT role_title,COUNT(emp_id) AS numberOfEmployees
+FROM role rl JOIN allocation al
+ON rl.role_id=al.role_id
+GROUP BY role_title;
+
+
+23)SELECT emp_name,COUNT(project_id) as numberofprojects
+FROM employee em JOIN allocation al
+ON em.emp_id=al.emp_id
+GROUP BY emp_name;
+
+24)SELECT emp_name,COUNT(role_id)as numberofroles
+FROM employee em JOIN allocation al
+ON em.emp_id=al.emp_id
+GROUP BY emp_name;
+
+25)SELECT r.role_title as RoleName, count(al.emp_id) as NumberOfEmployees
+FROM role r JOIN allocation as al
+ON r.role_id = al.role_id
+GROUP BY RoleName;
+
+
+26)SELECT role_title,COUNT(project_id)as noofprojects
+FROM role rl JOIN allocation al
+ON rl.role_id=al.role_id
+GROUP BY role_title;
+
+
+27)SELECT em.emp_name,rl.role_title,COUNT(project_id) as noofprojects
+FROM role rl JOIN allocation al
+ON rl.role_id=al.role_id
+JOIN employee em
+ON al.emp_id=em.emp_id
+GROUP BY em.emp_name,rl.role_title
+ORDER BY emp_name;
+
+
+28)SELECT em.emp_name,rl.role_title,COUNT(project_id) AS noOfEmployees
+FROM role rl JOIN allocation al
+ON rl.role_id=al.role_id
+JOIN employee em
+ON al.emp_id=em.emp_id
+GROUP BY rl.role_title,em.emp_name
+ORDER BY emp_name;
+
+29)SELECT r.role_title as RoleName, em.emp_name as EmpName, count(al.project_id) as NumberOfProjects
+FROM  allocation al JOIN employee em
+ON em.emp_id = al.emp_id
+JOIN role r ON r.role_id = al.role_id
+GROUP BY r.role_title, em.emp_name
+ORDER BY NumberOfProjects desc;
+
+
+30)SELECT dept_id,COUNT(emp_id) AS no_of_employees
+FROM employee
+GROUP BY dept_id
+ORDER BY dept_id;
+
+
+31)SELECT mgr_id,COUNT(emp_id) AS no_of_employees
+FROM employee
+GROUP BY mgr_id
+ORDER BY mgr_id;
+
+32)SELECT em.emp_name,rl.role_title,pt.project_name
+FROM employee em JOIN allocation al
+ON em.emp_id=al.emp_id
+JOIN  role rl 
+ON al.role_id=rl.role_id
+JOIN t_project pt
+ON pt.project_id=al.project_id
+GROUP BY em.emp_name,rl.role_title,pt.project_name
+ORDER BY emp_name;
+
+
+33)SELECT al.project_id, al.emp_id, SUM(amount_per_day) as TotalAmountCollected
+FROM employee em JOIN allocation al
+ON al.emp_id = em.emp_id
+GROUP BY al.project_id, al.emp_id
+ORDER BY TotalAmountCollected DESC;
+
+34)SELECT role_id,emp_id,project_id,((to_date-from_date)*amount_per_day)AS tac
+FROM allocation
+ORDER BY tac DESC;
+
+35)SELECT emp_id, mgr_id,
+CASE WHEN mgr_id is NOT NULL then 'Has Manager'
+WHEN mgr_id is NULL THEN 'No Manager'
+END AS Comments
+FROM employee;
+
+
+36)SELECT emp_name || 'works for' || mgr_name
+   FROM(SELECT e.emp_id,e.emp_name,e.mgr_id,mgr.emp_name AS mgr_name
+	FROM employee e
+	INNER join employee AS mgr
+	ON e.mgr_id=mgr.emp_id) AS e;
+
+37)SELECT e.emp_id
+FROM employee e 
+JOIN employee as manager
+ON e.mgr_id=manager.emp_id
+WHERE e.salary>manager.salary;
+
+38)SELECT mgr_id
+FROM (SELECT e.emp_id,e.hire_date,e.mgr_id,mgr.hire_date AS mgr_hiredate
+      FROM employee e
+      INNER JOIN employee AS mgr
+      ON e.mgr_id=mgr.emp_id) AS e
+WHERE hire_date<mgr_hiredate						   
+GROUP BY mgr_id;
+
+39)WITH temp AS (SELECT dept_id, avg(salary) AS AVG_DS
+	         FROM employee 
+          	 GROUP BY dept_id);					 
+SELECT emp_id,salary,AVG_DS
+FROM employee 
+INNER JOIN temp
+ON employee.dept_id=temp.dept_id
+WHERE salary>AVG_DS;	
+
+40)SELECT e.emp_id,a.role_id
+FROM employee e
+JOIN allocation a
+ON e.emp_id=a.emp_id
+WHERE 2 <= (SELECT COUNT(*)
+	    FROM allocation);
+	
+41)SELECT e.emp_id,al.role_id
+FROM employee e JOIN allocation al
+ON e.emp_id=al.emp_id
+WHERE 2<=(SELECT COUNT(*)
+	  FROM allocation);
+
+42)SELECT d.dept_id 
+FROM department d
+JOIN employee e
+ON( e.dept_id=d.dept_id)
+WHERE e.dept_id IS NULL;
+
+	
+SELECT dept_id 
+FROM department d
+WHERE NOT EXISTS (SELECT DISTINCT dept_id 
+	 	  FROM employee e 
+		  WHERE d.dept_id=e.dept_id);
+
+SELECT dept_id 
+FROM department
+WHERE dept_id NOT IN (SELECT distinct dept_id 
+		      FROM employee); 
+
+SELECT dept_id 
+FROM department EXCEPT (SELECT DISTINCT dept_id 
+		 	FROM employee);
+
+43)SELECT dept_id,dept_name
+FROM department EXCEPT (SELECT emp_id,emp_name
+			FROM employee)
+ORDER BY dept_id;
+
+
+44)SELECT project_id,role_id,COUNT(emp_id) AS noOfEmployees
+FROM allocation
+GROUP BY ROLLUP(project_id,role_id)
+ORDER BY project_id,role_id;
+
+SELECT project_id,role_id,COUNT(emp_id) AS noOfEmployees
+FROM allocation
+GROUP BY CUBE(project_id,role_id)
+ORDER BY project_id,role_id;
+
+45)SELECT a.emp_id,a.project_id,e.salary 
+FROM allocation a 
+JOIN employee e
+ON a.EMP_ID=E.EMP_ID
+GROUP BY ROLLUP(a.emp_id,a.project_id,e.salary)
+ORDER BY emp_id,project_id
+
+SELECT a.emp_id,a.project_id,e.salary
+FROM allocation a
+JOIN employee e
+ON a.emp_id=e.emp_id
+GROUP BY CUBE(a.emp_id,a.project_id,e.salary)
+ORDER BY emp_id,project_id
+
+46)SELECT emp_name
+FROM employee
+WHERE emp_name ='raja' OR emp_name='anil' OR emp_name='anjali';
+
+
+47)SELECT emp_id,COUNT(skill_id) AS number_of_skills,
+CASE 
+WHEN COUNT(skill_id)>5 THEN 'Major Resourse'
+WHEN COUNT(skill_id)>3 THEN 'Useful Resourse' 
+WHEN COUNT(skill_id)>1 THEN 'Resourse'
+END description
+FROM employeeskill
+GROUP BY emp_id
+ORDER BY emp_id;
+
+48)SELECT emp_id,SUM(casual_leave+sick_leave+privilege_leave) AS number_of_leaves,
+CASE
+WHEN SUM (casual_leave+sick_leave+privilege_leave)>6 THEN 'LOSS OF PAY'
+WHEN SUM (casual_leave+sick_leave+privilege_leave)<=6 THEN 'NO LOSS OF PAY'
+WHEN SUM (casual_leave+sick_leave+privilege_leave)=0 THEN 'BONUS'
+END description
+FROM employee
+GROUP BY emp_id
+ORDER BY emp_id;
+
+49)SELECT emp_id, salary
+FROM employee
+GROUP BY emp_id
+ORDER BY emp_id
+LIMIT 5;
+
+50)SELECT dept_id, COUNT(emp_id) AS number_of_emp
+FROM employee
+GROUP BY dept_id
+ORDER BY number_of_emp DESC
+LIMIT 3;
+
+51)WITH TEMP AS (SELECT dept_id,emp_id,emp_name,salary, 
+RANK()OVER (PARTITION BY dept_id  ORDER BY salary DESC) RANK FROM employee);
+
+SELECT dept_id,emp_id,emp_name,salary,rank
+FROM TEMP
+WHERE rank=2;
+
+52)SELECT e.emp_name,COUNT(skill_id) AS number_of_skills
+FROM employee e 
+JOIN employeeskill es
+ON e.emp_id=es.emp_id
+GROUP BY emp_name
+ORDER BY emp_name;
+
+53)SELECT e.emp_name,COUNT(trans_id)
+FROM employee e 
+JOIN mobilerecharge mr
+ON E.mobile_no=mr.mobile_no
+GROUP BY e.emp_name
+ORDER BY e.emp_name;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+						  

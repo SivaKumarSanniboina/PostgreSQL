@@ -1,0 +1,284 @@
+1)SELECT book_category,COUNT(book_category) AS "No of Books"
+FROM books
+GROUP BY book_category;
+
+2)SELECT title,COUNT(copy_no) rdbms_count
+FROM books                                                      
+WHERE book_category='RDBMS'
+GROUP BY title;
+
+3)SELECT book_category AS Category,title,edition
+FROM books
+WHERE ye_of_pub=1989;
+
+4)SELECT publisher_name,COUNT(book_id) 
+FROM books b inner join publishers p
+on b.publisher_id=p.publisher_id
+GROUP BY publisher_name 
+HAVING COUNT(book_id)>=ALL(SELECT COUNT( book_id) 
+			   FROM books 
+			   GROUP BY publisher_id);
+5)SELECT book_id,member_id,due_date,return_date
+  FROM book_transaction
+  ORDER BY due_date DESC;
+
+6)SELECT book_category
+FROM books BK 
+JOIN publishers PR
+ON BK.Publisher_ID=PR.publisher_id
+WHERE publisher_name='willey publications'
+
+7)SELECT book_category
+FROM books bk 
+JOIN book_transaction bt
+ON bk.book_id=bt.book_id
+GROUP BY BK.book_category
+HAVING count(book_category)<= ALL(SELECT COUNT(book_category)
+				  FROM books
+				  GROUP BY book_category);
+8)SELECT book_category
+FROM books bk 
+JOIN book_transaction bt
+ON bk.book_id=bt.book_id
+GROUP BY BK.book_category
+HAVING count(book_category)>= ALL(SELECT COUNT(book_category)
+				  FROM books
+				  GROUP BY book_category);
+9)SELECT book_id,title
+  FROM books
+  WHERE book_id = ANY (SELECT book_id
+		       FROM book_transaction
+		       WHERE issue_date NOT BETWEEN '2003-10-01' AND '2003-12-31');
+10)SELECT * 
+FROM books 
+GROUP BY book_id 
+HAVING book_id =ANY(SELECT book_id 
+		    FROM book_transaction 
+		    GROUP BY book_id); 
+11)SELECT author_name 
+FROM authors 
+WHERE  author_id=(SELECT author_id 
+		  FROM books 
+	          GROUP BY author_id 
+                  HAVING COUNT(book_id)>=ALL(SELECT COUNT(book_id) 
+				             FROM books 
+				  	     GROUP BY author_id));
+12)SELECT author_name,author_id 
+FROM author
+WHERE author_id=ALL(SELECT author_id 
+                     FROM books
+                     GROUP BY author_id,book_id 
+                     HAVING price>=ALL(SELECT price 
+                                       FROM books 
+                                       GROUP BY book_id));
+13)SELECT bk.title,mb.member_name,mb.member_id,member_dept,member_doj,status
+FROM book_transaction bt INNER JOIN books bk
+ON bt.book_id=bk.book_id 
+INNER JOIN members mb 
+ON mb.member_id=bt.member_id 
+WHERE return_date>= due_date;
+
+14)SELECT member_name 
+FROM members
+WHERE member_id=(SELECT member_id 
+                 FROM book_transaction 
+                 GROUP BY member_id
+                 HAVING SUM(return_date-due_date)>=ALL(SELECT SUM(return_date-due_date)
+                       			               FROM book_transaction 
+                                         	       GROUP BY member_id)); 
+15)SELECT publisher_id
+FROM books bk JOIN book_transaction bt
+ON bk.book_id=bt.book_id
+GROUP BY publisher_id
+HAVING COUNT (member_id)>=ALL(SELECT COUNT(member_id)
+                   	      FROM books bk JOIN book_transaction bt
+                     	      ON bk.book_id=bt.book_id
+                     	      GROUP BY publisher_id);
+16)SELECT publisher_id,sum(copy_no)
+FROM books
+GROUP BY publisher_id
+ORDER BY publisher_id;
+
+17)SELECT book_id, title
+FROM books
+WHERE book_id IN (SELECT book_id
+		  FROM book_transaction
+		  WHERE return_date >= ALL (SELECT issue_date 
+					    FROM book_transaction));
+18)SELECT MB.member_name,bk.*
+FROM book_transaction BT INNER JOIN books BK 
+ON BT.book_id=BK.book_id 
+INNER JOIN members MB 
+ON MB.member_id=BT.member_id 
+WHERE return_date<=due_date;
+
+19)SELECT book_id,publisher_id,price,title
+FROM books bk
+WHERE price=(SELECT MAX(price)
+	     FROM books
+	     WHERE publisher_id=bk.publisher_id);
+20)SELECT author_id,publisher_id 
+FROM books
+GROUP BY author_id,publisher_id;
+
+21)SELECT DISTINCT pb.publisher_name
+FROM publishers pb JOIN books bk
+ON pb.publisher_id=bk.publisher_id
+JOIN book_transaction bt
+ON bk.book_id=bt.book_id
+WHERE bt.return_date>bt.due_date;
+
+22)SELECT member_dept
+FROM members
+GROUP BY member_dept
+HAVING COUNT(member_dept)>=ALL(SELECT COUNT(member_dept)
+				FROM members
+				GROUP BY member_dept);
+23)SELECT DISTINCT title
+FROM books bk
+JOIN book_transaction bt
+ON(bk.book_id=bt.book_id)
+JOIN member m
+ON(m.member_id=bt.member_id)
+WHERE m.member_dept='TRG';
+
+24)SELECT member_id 
+FROM members 
+GROUP BY member_dept,member_id
+HAVING member_dept IN (SELECT member_dept
+		       FROM book_transaction 
+		       WHERE EXTRACT(YEAR FROM issue_date)='2003'AND 
+		       EXTRACT(MONTH FROM issue_date)='6'); 
+
+25)SELECT author_id,MAX(edition) 
+FROM books
+GROUP BY category,author_id,edition
+HAVING edition IN (SELECT MAX(edition)
+		   FROM books
+		   GROUP BY category)
+26)SELECT member_id,member_dept 
+FROM members mb 
+WHERE member_id IN (SELECT member_id 
+                    FROM book_transaction bt 
+                    GROUP BY bt.member_id,bt.issue_date 
+                    HAVING MAX(issue_date)=bt.issue_date); 
+27)SELECT MIN(price),book_id 
+FROM books
+GROUP BY publisher_id
+ORDERED BY publisher_id;
+
+28)SELECT publisher_id, COUNT (book_id) AS java_books
+FROM books
+WHERE title = 'JAVA'
+GROUP BY publisher_id;
+
+29)SELECT COUNT(member_id)
+FROM member
+WHERE status= 'I';
+
+30)SELECT title , book_id 
+FROM books
+WHERE book_id in (SELECT book_id 
+		  FROM book_transaction
+		  WHERE return_date>due_date);
+
+31)
+SELECT book_id,title 
+FROM books bk 
+WHERE category=bk.category AND bl.book_id IN (SELECT bt.book_Id 
+					      FROM book_transaction bt);
+32)SELECT book_id,title 
+FROM books
+WHERE book_id IN(SELECT book_id 
+		 FROM book_transaction 
+		 GROUP BY book_id,issue_date 
+	 	 HAVING EXTRACT(MONTH FROM issue_date)IN(1,2,3)); 
+33)SELECT member_name,member_dept
+FROM members
+WHERE status='I'
+GROUP BY  member_name,member_dept;
+34)SELECT member_name 
+FROM members
+GROUP BY member_id 
+HAVING member_id=(SELECT member_id 
+		  FROM book_transaction 
+		  GROUP BY member_id,issue_date 
+		  HAVING issue_date>=ALL(SELECT issue_date 
+	       	 			 FROM book_transaction 
+		  			 GROUP BY issue_date));
+34)SELECT member_name 
+FROM member
+GROUP BY member_id 
+HAVING member_id=(SELECT member_id 
+		  FROM book_transaction 
+		  GROUP BY member_id,issue_date 
+		  HAVING issue_date>=ALL(SELECT issue_date 
+			 		 FROM book_transaction 
+					 GROUP BY issue_date)); 
+35)
+SELECT bk.title,au.author_name,pb.publisher_name 
+FROM books bk JOIN author au 
+ON bk.author_id=au.author_id 
+JOIN publisher pb
+ON pb.publisher_id=bk.publisher_id 
+WHERE bk.rackno='5' 
+
+36) 
+SELECT bk.rackno,bk.book_id 
+FROM books bk JOIN book_transaction bt
+ON bt.book_id=bk.book_id 
+GROUP BY bk.rackno,bt.issue_date,bk.book_id 
+HAVING bt.issue_date>=ALL(SELECT issue_date 
+			  FROM book_transaction 
+			  GROUP BY issue_date); 
+
+
+
+37)
+SELECT bk.rackno,bk.book_id 
+FROM book bk JOIN book_transaction bt 
+ON bt.book_id=bk.book_id 
+GROUP BY bk.rackno,bt.issue_date,BK.book_id 
+HAVING bt.issue_date<=ALL(SELECT issue_date 
+			  FROM book_transaction 
+			  GROUP BY issue_date);
+
+38)
+SELECT COUNT(title)AS book_count,rackno 
+FROM book 
+GROUP BY rackno;
+ 
+39)SELECT member_name 
+FROM member 
+WHERE member_id=ALL(SELECT member_id 
+		    FROM book_transaction 
+           	    GROUP BY member_id,issue_date 
+		    HAVING issue_date<=ALL(SELECT issue_date 
+					   FROM book_transaction)); 
+40)
+SELECT title 
+FROM books 
+WHERE book_id=ALL(SELECT book_id 
+		  FROM book_transaction 
+		  GROUP BY book_id,issue_date 
+		  HAVING issue_date<=ALL(SELECT issue_date 
+		  			 FROM book_transaction));
+41)	
+SELECT title 
+FROM books 
+WHERE book_id=ALL(SELECT book_id 
+		  FROM book_transaction 
+		  GROUP BY book_id,issue_date 
+		  HAVING issue_date>=ALL(SELECT issue_date 
+					 FROM book_transaction));
+
+
+
+
+
+
+
+SELECT MEMBER_ID 
+FROM BOOK_TRANSACTION
+EXCEPT BOOK_ID
+

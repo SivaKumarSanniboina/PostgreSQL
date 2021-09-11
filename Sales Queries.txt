@@ -1,0 +1,373 @@
+1)SELECT category_code
+FROM product
+WHERE product_code= (SELECT MAX(product_code) 
+                     FROM product);
+
+
+2) SELECT category_code
+FROM product
+WHERE product_code= (SELECT MIN(product_code) 
+                     FROM product);
+
+3) SELECT category_code
+   FROM category
+   WHERE category_code NOT IN(SELECT category_code
+			      FROM product);
+
+4) SELECT product_code,MAX(price)
+FROM product
+GROUP BY product_code
+HAVING MAX(price)>=ALL(SELECT MAX(price)
+			FROM product
+			GROUP BY product_code);
+
+5) SELECT category-code,product_desc,price
+   FROM product
+   Where price=(SELECT MAX(price)
+		FROM product);
+
+6) SELECT category_code
+   FROM product
+   WHERE qty_on_hand = (SELECT MAX (qty_on_hand) 
+                        FROM product);		
+
+
+7)SELECT category_code, MAX (price)
+FROM product
+GROUP BY category_code;
+
+8) SELECT category_code,MIN(qty_on_hand)
+   FROM product
+   GROUP BY category_code;
+
+9)SELECT order_code
+FROM order_detail 
+WHERE product_code=(SELECT MAX(product_code) 
+		    FROM order_detail)
+
+
+10)SELECT product_code
+   FROM order_detail
+  GROUP BY product_code
+  HAVING COUNT(order_code)>=ALL(SELECT COUNT(order_code)
+				FROM order_detail
+				GROUP BY product_code);
+
+
+
+11) SELECT product_code,MIN(qty_ordered)
+    FROM order_detail
+    GROUP BY product_code
+    HAVING MIN(qty_ordered) <= ALL(SELECT MIN(qty_ordered)
+				   FROM order_detail
+				   GROUP BY product_code);
+
+12)SELECT product_code,prod_desc
+FROM product pt
+WHERE NOT EXISTS (SELECT product_code
+FROM order_detail od
+WHERE pt.product_code=od.product_code);
+
+
+
+13)SELECT order_code,SUM(qty_ordered*price) AS bill
+   FROM product pr JOIN order_detail od
+   ON od.product_code=pr.product_code
+   GROUP BY order_code
+   HAVING SUM(qty_ordered*price)>=ALL(SELECT SUM(qty_ordered*price)AS bill
+				   FROM product pr JOIN order_detail od
+				   ON od.product_code=pr.product_code
+				   GROUP BY order_code);
+
+14)SELECT od.order_code,om.order_date
+FROM product pr JOIN order_detail od
+ON pr.product_code=od.product_code
+JOIN order_master om
+ON od.order_code=om.order_code 
+GROUP BY od.order_code,om.order_date
+HAVING SUM(qty_ordered*price)>=ALL(SELECT    
+				   SUM(qty_ordered*price)AS bill                             
+	                           FROM product pr
+		                   JOIN order_detail od
+	                           ON pr.product_code=od.product_code
+	                           GROUP BY od.order_code);
+15)SELECT od.order_code,om.customer_code
+FROM product p JOIN order_detail od
+ON p.product_code=od.product_code
+JOIN order_master om
+ON od.order_code=om.order_code
+GROUP BY od.order_code,om.customer_code
+HAVING SUM(qty_ordered*price)>=ALL(SELECT SUM(qty_ordered*price)
+	       		           FROM product p 
+			           JOIN order_detail od
+                                   ON p.product_code=od.product_code
+                                   GROUP BY order_code);
+
+16)SELECT od.order_code
+FROM product p JOIN order_detail od
+ON p.product_code=od.product_code
+JOIN order_master om
+ON od.order_code=om.order_code
+GROUP BY od.order_code ,om.order_code
+HAVING om  .order_date=CURRENT_DATE;
+
+17)SELECT c.customer_code,c.customer_name,om.order_code,
+   om.order_date,od.qty_ordered,(qty_ordered*price)AS bill
+   FROM  customer c JOIN order_master om
+   ON c.customer_code=om.customer_code
+   JOIN order_detail od
+   ON om.order_code=od.order_code
+   JOIN product p
+   ON od.product_code=p.product_code
+
+18)SELECT customer_code
+FROM order_master om
+JOIN order_detail od
+ON od.order_code=om.order_code
+WHERE 5000<= (SELECT SUM(qty_on_hand*price) FROM product pt
+	      JOIN order_detail od
+	      ON od.product_code=pt.product_code);
+
+
+19)SELECT country_code, branch_name
+FROM branch
+WHERE country_code = (SELECT MAX (country_code) 
+		      FROM branch);
+
+20)SELECT country_code, branch_name
+FROM branch
+WHERE country_code = (SELECT MIN (country_code) 
+		      FROM branch);
+21)SELECT country_code, country_name
+FROM country
+WHERE country_code NOT IN (SELECT country_code 
+                           FROM branch);
+
+
+22)SELECT branch_code
+FROM salesrep
+WHERE branch_code = (SELECT MAX (branch_code) 
+                     FROM salesrep);
+
+
+23)SELECT branch_code
+FROM salesrep
+WHERE branch_code = (SELECT MIN (branch_code) 
+  		     FROM salesrep);
+
+
+24)SELECT branch_code
+FROM branch
+WHERE branch_code NOT IN (SELECT branch_code 
+			  FROM salesrep);
+
+25)SELECT salesrep_id,salesrep_name
+FROM salesrep 
+WHERE salesrep_id = (SELECT MAX(salesrep_id) 
+	             FROM order_master)
+
+
+26)SELECT DISTINCT mgr 
+FROM salesrep;
+
+27)SELECT salesrep_name
+FROM salesrep
+GROUP BY salesrep_name,salesrep_doj
+HAVING salesrep_doj<=ALL(SELECT salesrep_doj
+                         FROM salesrep
+    GROUP BY mgr,salesrep_doj);
+
+28)SELECT salesrep_name
+FROM salesrep
+GROUP BY salesrep_name,salary
+HAVING salary>=ALL(SELECT salary
+                   FROM salesrep
+     GROUP BY mgr,salary);
+
+29)SELECT mgr
+FROM salesrep
+GROUP BY mgr
+HAVING sum(salary)> (SELECT AVG(salary)
+                     FROM salesrep);
+
+32)SELECT sr.salesrep_id
+FROM salesrep sr
+LEFT JOIN order_master om
+ON sr.salesrep_id=om.salesrep_id
+WHERE om.salesrep_id IS NULL
+
+
+33)SELECT sr.salesrep_id,sr.salesrep_name,sr.salary AS SALARY,
+SUM(qty_ordered*price) AS TOTAL_ORDER_VALUE,
+SUM((qty_ordered*price)*0.05) AS COMMISSION
+FROM salesrep sr JOIN order_master om
+ON sr.salesrep_id=om.salesrep_id
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product pr
+ON pr.product_code=od.product_code
+GROUP BY od.order_code,sr.salesrep_name,sr.Salesrep_id
+ORDER BY od.order_code;
+
+34)SELECT sp.salesrep_name,om.order_code,SUM(qty_ordered*price) AS bill
+FROM salesrep sp 
+JOIN order_master om
+ON sp.salesrep_id=om.salesrep_id
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product pr
+ON od.product_code=pr.product_code
+GROUP BY sp.salesrep_name,om.order_code
+ORDER BY om.order_code;
+
+35)SELECT sp.salesrep_name,om.order_code,COUNT(od.product_code)
+FROM salesrep sp JOIN order_master om
+ON sp.salesrep_id=om.salesrep_id
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product pr
+ON od.product_code=pr.product_code
+GROUP BY sp.salesrep_name,om.order_code
+ORDER BY om.order_code;
+
+36)SELECT s.salesrep_name,od.order_code,(od.qty_ordered*p.price)AS bill_value,qty_ordered AS NO_OF_PRODUCTS
+FROM salesrep s  JOIN order_master om
+ON s.salesrep_id=om.salesrep_id
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product p
+ON od.product_code=p.product_code
+WHERE EXTRACT(YEAR FROM om.order_date)=2010 AND od.qty_ordered>10 AND s.salary>4500
+GROUP BY od.order_code,s.salesrep_name,(od.qty_ordered*p.price),qty_ordered
+ORDER BY od.order_code;
+
+
+37)SELECT salesrep_name FROM salesrep
+WHERE salesrep_doj=(SELECT MAX(salesrep_doj) 
+		    FROM salesrep);
+
+
+38)SELECT sr.salesrep_id,COUNT(order_code) AS NO_OF_ORDERS
+FROM salesrep sr
+JOIN order_master om
+ON sr.salesrep_id=om.salesrep_id
+GROUP BY sr.salesrep_id
+ORDER BY sr.salesrep_id DESC
+LIMIT 1;
+
+39)SELECT EXTRACT(month FROM order_date) AS MONTH,
+COUNT(order_code) AS NO_OF_ORDERS    
+FROM order_master
+WHERE EXTRACT(YEAR FROM order_date)=2010
+GROUP BY ROLLUP(EXTRACT(month FROM order_date))
+ORDER BY EXTRACT(month FROM order_date);
+
+40)SELECT c.region,s.salesrep_id
+FROM country c JOIN branch b
+ON c.country_code=b.country_code
+JOIN salesrep s
+ON b.branch_code=s.branch_code
+LEFT JOIN order_master om
+ON s.salesrep_id=om.salesrep_id
+WHERE om.salesrep_id IS NULL;
+
+41)SELECT c.region,MAX(salesrep_id) AS SALESREP
+FROM country c
+JOIN branch b
+ON c.country_code=b.country_code
+       JOIN salesrep s
+       ON b.branch_code=s.branch_code
+       WHERE salesrep_id = (SELECT MAX(salesrep_id) FROM salesrep)
+       GROUP BY region
+       ORDER BY region;
+
+42)SELECT od.order_code,COUNT(od.qty_ordered),SUM(od.qty_ordered*p.price)as bill	
+FROM order_detail od JOIN product p 	
+ON p.product_code=od.product_code
+GROUP BY od.order_code
+HAVING SUM(od.qty_ordered*price)<500;
+
+43)SELECT * FROM (SELECT product_code,count(product_code),DENSE_RANK() OVER (ORDER BY COUNT (product_code) DESC)rank
+FROM order_detail od
+JOIN order_master om
+ON om.order_code=od.order_code
+WHERE customer_code=(SELECT customer_code
+		     FROM order_master
+		     GROUP BY customer_code
+	             HAVING COUNT(order_code)>=ALL(SELECT 
+						   COUNT(order_code)
+		                                   FROM order_master
+				                   GROUP BY customer_code));
+GROUP BY product_code
+ORDER BY COUNT(product_coDe) DESC)temp
+WHERE rank<=1;
+
+44)SELECT p.product_code
+FROM product p LEFT JOIN order_detail od
+ON p.product_code=od.product_code
+WHERE od.product_code IS NULL;
+
+45)SELECT order_code
+FROM order_detail od JOIN product p
+ON p.product_code=od.product_code
+WHERE p.qty_on_hand<od.qty_ordered;
+  
+46)SELECT c.customer_code,c.customer_name,om.order_code,p.product_code,p.prod_desc,om.order_date
+FROM customer c
+JOIN order_master om
+ON c.customer_code=om.customer_code
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product p
+ON od.product_code=p.product_code;
+
+47)From
+   Where
+   Group By
+   Having
+   Select
+   Order By
+
+49)SELECT c.customer_code,c.customer_name,COUNT(order_code) AS numberOfOrders
+FROM customer c
+JOIN order_master om
+ON c.customer_code=om.customer_code
+GROUP BY c.customer_code
+ORDER BY c.customer_code
+LIMIT 10;
+
+50)SELECT om.order_code,SUM(qty_ordered*price) AS bill
+FROM order_master om
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product p
+ON od.product_code=p.product_code
+GROUP BY om.order_code
+ORDER BY om.order_code DESC
+LIMIT 5;
+
+51)SELECT salesrep_id FROM order_master
+WHERE order_code='OR11';
+   SELECT salesrep_id FROM order_master
+WHERE order_code='OR15';
+
+52)SELECT s.salesrep_name||'works for '||mgr.salesrep_name AS WorkersWorkForMgr
+FROM salesrep s 
+JOIN salesrep mgr
+ON mgr.salesrep_id=s.mgr;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
