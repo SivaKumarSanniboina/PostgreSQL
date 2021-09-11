@@ -1,0 +1,99 @@
+
+CROSSTAB:::::::::::::::::::
+
+
+CREATE EXTENSION TABLEFUNC
+ SELECT *
+ 
+FROM CROSSTAB(
+'SELECT ME.member_name,BT.book_id,EXTRACT(month from BT.issue_date)
+FROM book_transaction BT JOIN members ME
+ON ME.member_id=BT.member_id
+GROUP BY ME.member_name,BT.book_id,EXTRACT(month from BT.issue_date)
+order  by 2',
+'SELECT m FROM generate_series(1,12)m'
+)as(
+	member_name VARCHAR,
+	"jan"int,
+	"feb"int,
+	"mar"int,
+	"apr"int,
+	"may"int,
+	"jun"int,
+	"jul"int,
+	"aug"int,
+	"sep"int,
+	"oct"int,
+	"nov"int,
+	"dec"int
+	);
+
+
+CREATE EXTENSION TABLEFUNC
+SELECT*
+FROM crosstab(
+'SELECT book_id,EXTRACT(month FROM issue_date),COUNT(issue_date)
+	FROM book_transaction
+	GROUP BY book_id,EXTRACT(month FROM issue_date)
+	ORDER BY 1',
+	'SELECT m FROM generate_series(1,12)m'
+  )as(
+	  book_id VARCHAR,
+	  "jan" int,
+	  "feb" int,
+	  "Mar" int,
+	  "Apr" int,
+	  "May" int,
+	  "Jun" int,
+	  "july"int,
+	  "Aug" int,
+	  "Sep" int,
+	  "Oct" int,
+	  "Nov" int,
+	  "Dec" int
+	  );
+
+
+
+
+CASE:::::::::::::
+
+SELECT prod_desc,qty_on_hand,product_code,
+   CASE
+    WHEN qty_on_hand >0 AND qty_on_hand <20 THEN 'raise the purchase order immediately'
+	WHEN  qty_on_hand >20 AND qty_on_hand <100 THEN 'raise the purchase order very soon'
+	ELSE 'Sufficient stock in my hand'
+	END status
+FROM product
+
+product which is not requested by customer?
+
+NOT IN
+
+SELECT product_code,prod_desc
+FROM product
+WHERE product_code NOT IN (SELECT product_code
+						  FROM order_detail)
+LEFT JOIN
+ 
+ SELECT pt.product_code,COUNT(od.order_code)
+ FROM product pt LEFT JOIN order_detail od
+ ON pt.product_code = od.product_code
+ GROUP BY pt.product_code
+ HAVING COUNT(od.order_code)=0
+ ORDER BY product_code DESC
+ 
+ Co-related 
+ SELECT product_code,prod_desc
+ FROM product pt
+ WHERE NOT EXISTS (SELECT product_code
+				  FROM order_detail od
+				 WHERE pt.product_code=od.product_code )
+ 
+ SET
+ 
+ SELECT product_code
+ FROM product
+ EXCEPT
+ SELECT product_code
+ FROM order_detail

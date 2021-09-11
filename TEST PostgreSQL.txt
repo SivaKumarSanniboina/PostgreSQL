@@ -1,0 +1,150 @@
+1)Display the details of the customer who made the costliest order.
+
+SELECT om.customer_code,od.order_code
+FROM product pr JOIN order_detail od
+ON pr.product_code=od.product_code
+JOIN order_master om
+ON od.order_code=om.order_code
+GROUP BY od.order_code,om.customer_code
+HAVING SUM(qty_ordered*price)>=ALL(SELECT SUM(qty_ordered*price)
+								  FROM product pr								  GROUP BY order_code);							  
+
+2)Explain the order of execution in the query.
+
+FROM
+WHERE 
+GROUP BY
+HAVING
+SELECT
+ORDER BY
+LIMIT
+
+3)How many orders are processed by the seniormost salesrep in April-2018.
+
+CREATE EXTENSION TABLEFUNC
+select * from crosstab(
+'SELECT sr.salesrep_name,EXTRACT(MONTH FROM om.order_date),SUM(od.qty_ordered*pr.price)
+FROM  salesrep sr JOIN order_master om
+ON sr.salesrep_id=om.salesrep_id
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product pr
+ON od.product_code=pr.product_code
+WHERE EXTRACT(YEAR FROM om.order_date)=2018
+GROUP BY sr.salesrep_id,sr.salesrep_name,EXTRACT(MONTH FROM om.order_date) order by 1',
+  'select m from generate_series(1,4) m'
+) as (
+  salesrep_id varchar,
+  salesrep_name varchar,
+  "Jan" int,
+  "Feb" int,
+  "Mar" int,
+  "Apr" int);
+
+4)Get the details of the customer who have not placed any order.(All possibilities)
+
+
+1)SELECT customer_code
+FROM customer cr
+WHERE NOT EXISTS (SELECT DISTINCT order_code
+				 FROM order_master om
+				 WHERE cr.customer_code=om.customer_code);
+2)SELECT customer_code
+FROM customer
+WHERE customer_code NOT IN (SELECT DISTINCT customer_code
+						   FROM order_master);
+
+3)SELECT customer_code
+FROM customer
+EXCEPT
+(SELECT customer_code
+		FROM order_master);
+
+4)SELECT cr.customer_code
+FROM customer cr JOIN order_master om
+ON cr.customer_code=om.customer_code
+WHERE om.order_code IS NULL;
+
+5)Orderwise,productwise,sum of the order quantity,prepare a report using Rollup.
+
+
+SELECT od.order_code,pr.product_code,SUM(qty_ordered)
+FROM order_detail od
+INNER JOIN product pr
+ON od.product_code=pr.product_code
+GROUP BY ROLLUP(order_code,pr.product_code,qty_ordered)
+ORDER BY (order_code);
+6)Using Crosstab generate the report.
+
+Month wise display the order-count of SalesRep?
+
+ANSWER:
+
+CREATE EXTENSION TABLEFUNC
+SELECT * FROM crosstab(
+'SELECT sr.salesrep_name,EXTRACT(MONTH FROM om.order_date),SUM(od.qty_ordered*pr.price)
+FROM salesrep sr JOIN order_master om
+ON sr.salesrep_id=om.salesrep_id
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product pr
+ON od.product_code=pr.product_code
+GROUP BY sr.salesrep_name,EXTRACT(MONTH FROM om.order_date) order by 1',
+  'SELECT m FROM generate_series(1,6) m'
+) AS (
+  salesrep_name varchar,
+  "January" int,
+  "February" int,
+  "March" int,
+  "April" int,
+  "May" int,
+  "June" int);
+
+7)Display the name of the customers who have placed orders whose billvalue is greater than Rs.200000 
+
+SELECT cr.customer_code,cr.customer_name,SUM(qty_ordered*price) as bill
+FROM customer cr JOIN order_master om
+ON cr.customer_code=om.customer_code
+JOIN order_detail od
+ON om.order_code=od.order_code
+JOIN product pr
+ON od.product_code=pr.product_code
+GROUP BY cr.customer_code
+HAVING SUM(qty_ordered*price) >= 200000;
+
+8)Create a report based on the following conditions
+
+     a) Order Count for a Product is more than 4 - Review as ‘Frequently ordered Product’
+
+     b) Order count for a Product is greater than 2 – Review as ‘Less ordered Product’
+
+     c) Order count for a Product is less than 2 – Review as  ‘Rarely ordered Product’
+
+SELECT pr.prod_desc,COUNT(order_code) as OrdersCount,
+CASE 
+	WHEN COUNT(order_code)>= 4 THEN 'Frequently ordered Product'
+	WHEN COUNT(order_code)>= 2 THEN 'Less ordered Product'
+	WHEN COUNT(order_code)< 2 THEN 'Rarely ordered Product'
+END Performance
+FROM order_detail od JOIN product pr
+ON od.product_code=pr.product_code
+GROUP BY pr.prod_desc;
+	
+9)List the products that have been requested in more than 3 orders.
+
+SELECT pr.product_code,COUNT(order_code)AS NO_OF_ORDERS
+FROM product pr
+JOIN order_detail od
+ON pr.product_code=od.product_code
+GROUP BY pr.product_code
+ORDER BY pr.product_code
+LIMIT 1;
+
+10)Explain the situation where index should not be used.
+
+
+
+1)Indexes should not be used on tables containing few records.
+2)Tables that have frequent, large batch updates or insert operations.
+3)Indexes should not be used on columns that contain a high number of NULL values.
+4)Indexes should not be used on the columns that are frequently manipulated.
